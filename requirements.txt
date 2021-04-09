@@ -1,0 +1,6 @@
+numpy
+ray
+opencv-python
+pre-commit
+black
+mypy-extensions
