@@ -1,22 +1,17 @@
 import logging
 import typing as t
 
-import ray
 import numpy as np
-from ray.util.queue import Queue
-
+import ray
 from abstract_model import Model
+from ray.util.queue import Queue
 
 
 Pred = t.Tuple[int, t.List[t.Any]]
 
 
 @ray.remote
-def process_image_tile(
-        image: np.ndarray,
-        quadrant: int,
-        model: Model
-) -> Pred:
+def process_image_tile(image: np.ndarray, quadrant: int, model: Model) -> Pred:
     if quadrant not in (1, 2, 3, 4):
         raise Exception("Incorrect quadrant value provided. Expected: 1-4")
     if not isinstance(model, Model) and not hasattr(model, "predict"):
@@ -24,13 +19,13 @@ def process_image_tile(
 
     h, w, c = image.shape
     if quadrant == 1:
-        tile: np.ndarray = image[0: h // 2, w // 2:, :]
+        tile: np.ndarray = image[0 : h // 2, w // 2 :, :]
     elif quadrant == 2:
-        tile: np.ndarray = image[0: h // 2, 0: w // 2, :]
+        tile = image[0 : h // 2, 0 : w // 2, :]
     elif quadrant == 3:
-        tile: np.ndarray = image[h // 2:, 0: w // 2, :]
+        tile = image[h // 2 :, 0 : w // 2, :]
     else:
-        tile: np.ndarray = image[h // 2:, w // 2:, :]
+        tile = image[h // 2 :, w // 2 :, :]
 
     preds = model.predict(tile)
     return quadrant, preds
@@ -39,11 +34,11 @@ def process_image_tile(
 @ray.remote
 class ObjectDetectorActor:
     def __init__(
-            self,
-            model: Model,
-            queue_in: Queue,
-            queue_out: Queue,
-            logger: logging.Logger
+        self,
+        model: Model,
+        queue_in: Queue,
+        queue_out: Queue,
+        logger: logging.Logger,
     ) -> None:
         self._model = model
         self._queue_in = queue_in

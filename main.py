@@ -1,7 +1,7 @@
-import os
-import typing as t
 import argparse
 import logging
+import os
+import typing as t
 
 import cv2
 import ray
@@ -13,7 +13,7 @@ from detectors import ObjectDetectorActor
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(lineno)d in %(filename)s at %(asctime)s: %(message)s"
+    format="%(lineno)d in %(filename)s at %(asctime)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def main() -> int:
 
     queue_to_objdef = Queue(maxsize=5)
     queue_objdet_to_txtdet = Queue(maxsize=5)
-    detector = ObjectDetectorActor.remote(
+    detector = ObjectDetectorActor.remote(  # type: ignore
         model, queue_to_objdef, queue_objdet_to_txtdet, logger
     )
     detector.run.remote()
@@ -67,8 +67,9 @@ def main() -> int:
 
     while not queue_objdet_to_txtdet.empty():
         image_name, image, results = queue_objdet_to_txtdet.get()
-        logger.info(f"Got results for image: {image_name}. "
-                    f"Detections: {results}")
+        logger.info(
+            f"Got results for image: {image_name}. " f"Detections: {results}"
+        )
 
     return 0
 
