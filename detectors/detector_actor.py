@@ -1,5 +1,5 @@
-from ray.util.queue import Queue
 import ray
+from ray.util.queue import Queue
 
 from detectors.yolov4.yolov4_cv2based import DetectionModel
 from helpers import LoggerMixin
@@ -18,7 +18,7 @@ class ObjectDetectorActor(LoggerMixin):
         self._model = ObjectDetectorActor._init_model(model_name)
         self._queue_in = queue_in
         self._queue_out = queue_out
-        self._logger.info("ObjectDetectorActor initialized")
+        self.logger.info("ObjectDetectorActor initialized")
 
     @staticmethod
     def _init_model(model_name: str) -> DetectionModel:

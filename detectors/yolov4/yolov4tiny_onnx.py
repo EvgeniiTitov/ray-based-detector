@@ -1,9 +1,11 @@
+# type: ignore
 import os
-import onnxruntime as rt
+from typing import List
+from typing import Sequence
 
 import cv2
 import numpy as np
-from typing import List, Sequence
+import onnxruntime as rt
 
 
 class YOLOv4TinyONNX(AbstractModel):
@@ -25,7 +27,8 @@ class YOLOv4TinyONNX(AbstractModel):
         )
         logger_ml.info(
             f"ONNX-v4 %s model's dependencies loaded from: '%s'",
-            model_name, _path_to_dependencies
+            model_name,
+            _path_to_dependencies,
         )
         try:
             p = os.path.join(_path_to_dependencies, f"{self._file_names}.onnx")
@@ -67,8 +70,9 @@ class YOLOv4TinyONNX(AbstractModel):
         img /= 255.0
         return img
 
-    def _postprocess_results(self, output: Sequence, image: np.ndarray) -> \
-            Sequence:
+    def _postprocess_results(
+        self, output: Sequence, image: np.ndarray
+    ) -> Sequence:
         """
         Performs result postprocessing by applying NMS and conf  thresholding
         """
@@ -77,7 +81,7 @@ class YOLOv4TinyONNX(AbstractModel):
         box_array = output[0]
         # [batch, num, num_classes]
         confs = output[1]
-        if type(box_array).__name__ != 'ndarray':
+        if type(box_array).__name__ != "ndarray":
             box_array = box_array.cpu().detach().numpy()
             confs = confs.cpu().detach().numpy()
 
@@ -108,21 +112,31 @@ class YOLOv4TinyONNX(AbstractModel):
                     ll_max_conf = ll_max_conf[keep]
                     ll_max_id = ll_max_id[keep]
                     for k in range(ll_box_arr.shape[0]):
-                        bboxes.append([
-                            int(
-                                (ll_box_arr[k, 0] if ll_box_arr[k, 0] > 0
-                                 else 0) * img_w
-                            ),
-                            int(
-                                (ll_box_arr[k, 1] if ll_box_arr[k, 1] > 0
-                                 else 0) * img_h
-                            ),
-                            int((ll_box_arr[k, 2]) * img_w),
-                            int((ll_box_arr[k, 3]) * img_h),
-                            ll_max_conf[k],
-                            ll_max_conf[k],
-                            self.classes[ll_max_id[k]]
-                        ])
+                        bboxes.append(
+                            [
+                                int(
+                                    (
+                                        ll_box_arr[k, 0]
+                                        if ll_box_arr[k, 0] > 0
+                                        else 0
+                                    )
+                                    * img_w
+                                ),
+                                int(
+                                    (
+                                        ll_box_arr[k, 1]
+                                        if ll_box_arr[k, 1] > 0
+                                        else 0
+                                    )
+                                    * img_h
+                                ),
+                                int((ll_box_arr[k, 2]) * img_w),
+                                int((ll_box_arr[k, 3]) * img_h),
+                                ll_max_conf[k],
+                                ll_max_conf[k],
+                                self.classes[ll_max_id[k]],
+                            ]
+                        )
             bboxes_batch.append(bboxes)
         return bboxes_batch
 
@@ -157,7 +171,7 @@ class YOLOv4TinyONNX(AbstractModel):
     @staticmethod
     def load_class_names(namesfile: str) -> List[str]:
         class_names = []
-        with open(namesfile, 'r') as fp:
+        with open(namesfile, "r") as fp:
             lines = fp.readlines()
         for line in lines:
             line = line.rstrip()

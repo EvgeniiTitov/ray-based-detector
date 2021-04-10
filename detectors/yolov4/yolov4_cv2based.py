@@ -43,11 +43,7 @@ class DetectionModel(Model, LoggerMixin):
         )
         net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
         model = cv2.dnn_DetectionModel(net)
-        model.setInputParams(
-            size=(608, 608),
-            scale=1/255,
-            swapRB=True
-        )
+        model.setInputParams(size=(608, 608), scale=1 / 255, swapRB=True)
         return model
 
     def _read_model_classes(self) -> t.List[str]:

@@ -7,5 +7,5 @@ import numpy as np
 
 class Model(ABC):
     @abstractmethod
-    def predict(self, batch: np.ndarray) -> t.List[t.List[t.Any]]:
+    def predict(self, batch: t.List[np.ndarray]) -> t.List[t.List[t.Any]]:
         ...

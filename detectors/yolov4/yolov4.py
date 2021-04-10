@@ -1,15 +1,17 @@
 import os
 import sys
+from typing import List
+from typing import Tuple
 
 import cv2
-import torchvision.transforms as transforms
-import torch.nn.functional as F
-from typing import List, Tuple
 import torch
+import torch.nn.functional as F
+import torchvision.transforms as transforms
 
-from .tool.utils import *
+from .abstract_detector import Model
 from .tool.darknet2pytorch import Darknet
-from .abstract_model import Model
+from .tool.utils import *
+
 sys.path.append("..")
 from config import Config
 from helpers import LoggerMixin
@@ -21,9 +23,7 @@ class YOLOv4(Model, LoggerMixin):
 
     def __init__(self, model_name: str, device: str = "gpu") -> None:
         folder = os.path.join(os.path.dirname(__file__))
-        config_path = os.path.join(
-            folder, "dependencies", model_name + ".cfg"
-        )
+        config_path = os.path.join(folder, "dependencies", model_name + ".cfg")
         weights_path = os.path.join(
             folder, "dependencies", model_name + ".weights"
         )
@@ -33,7 +33,7 @@ class YOLOv4(Model, LoggerMixin):
         self.logger.info(
             f"%s's dependencies loaded from: '%s'",
             model_name,
-            os.path.join(os.path.dirname(__file__), 'dependencies')
+            os.path.join(os.path.dirname(__file__), "dependencies"),
         )
         if device != "cpu":
             self.device = torch.device(
@@ -64,9 +64,7 @@ class YOLOv4(Model, LoggerMixin):
         # Load classes and move model to device and prepare for inference
         self.classes = YOLOv4.read_classes_txt(classes_path)
         self.model.to(self.device).eval()
-        self.logger.info(
-            f"%s loaded to device: '%s'", model_name, self.device
-        )
+        self.logger.info(f"%s loaded to device: '%s'", model_name, self.device)
 
     def predict(self, images: List[np.ndarray]) -> List[list]:
         """
@@ -147,7 +145,7 @@ class YOLOv4(Model, LoggerMixin):
         box_array = predictions[0]
         # [batch, num, num_classes]
         confs = predictions[1]
-        if type(box_array).__name__ != 'ndarray':
+        if type(box_array).__name__ != "ndarray":
             box_array = box_array.cpu().detach().numpy()
             confs = confs.cpu().detach().numpy()
 
@@ -177,9 +175,15 @@ class YOLOv4(Model, LoggerMixin):
                     ll_max_id = ll_max_id[keep]
                     for k in range(ll_box_array.shape[0]):
                         bboxes.append(
-                            [ll_box_array[k, 0], ll_box_array[k, 1],
-                             ll_box_array[k, 2], ll_box_array[k, 3],
-                             ll_max_conf[k], ll_max_conf[k], ll_max_id[k]]
+                            [
+                                ll_box_array[k, 0],
+                                ll_box_array[k, 1],
+                                ll_box_array[k, 2],
+                                ll_box_array[k, 3],
+                                ll_max_conf[k],
+                                ll_max_conf[k],
+                                ll_max_id[k],
+                            ]
                         )
 
             bboxes_batch.append(bboxes)
@@ -187,9 +191,7 @@ class YOLOv4(Model, LoggerMixin):
         return bboxes_batch
 
     def rescale_boxes(
-            self,
-            boxes_for_batch: list,
-            original_images: List[np.ndarray]
+        self, boxes_for_batch: list, original_images: List[np.ndarray]
     ) -> List[list]:
         """
         Converts and rescales boxes from standard net output format to:
@@ -222,7 +224,10 @@ class YOLOv4(Model, LoggerMixin):
                     self.logger.debug(
                         "Wrong BB coordinates. Expected: left < right, "
                         "actual: %d < %d;   top < bot, actual: %d < %d",
-                        new_left, new_right, new_top, new_bot
+                        new_left,
+                        new_right,
+                        new_top,
+                        new_bot,
                     )
                 # new_left = int((box[0] - pad_x // 2) * (orig_w / unpad_w))
                 # new_left = 2 if new_left == 0 else new_left
@@ -242,8 +247,7 @@ class YOLOv4(Model, LoggerMixin):
 
     @staticmethod
     def pad_to_square(
-            img: torch.Tensor,
-            pad_value: int
+        img: torch.Tensor, pad_value: int
     ) -> Tuple[torch.Tensor, tuple]:
         """
         Pads image with pad_value colour so that it becomes a square h = w
@@ -266,8 +270,7 @@ class YOLOv4(Model, LoggerMixin):
 
     @staticmethod
     def preprocess_image(
-            image: np.ndarray,
-            image_size: int = 608
+        image: np.ndarray, image_size: int = 608
     ) -> torch.Tensor:
         image = transforms.ToTensor()(image)
         # Padd the image so that it is a square

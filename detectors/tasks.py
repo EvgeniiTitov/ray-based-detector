@@ -2,6 +2,7 @@ import typing as t
 
 import numpy as np
 import ray
+
 from detectors.yolov4.abstract_model import Model
 
 
