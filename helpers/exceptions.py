@@ -1,0 +1,2 @@
+class FailedObjectStorePush(Exception):
+    pass
