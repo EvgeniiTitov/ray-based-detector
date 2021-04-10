@@ -48,12 +48,12 @@ def main() -> int:
     args = parse_args()
     validate_args(args)
 
-    model = DetectionModel("objdet")
+    model = DetectionModel("diagram_reader")
 
-    queue_to_objdef = Queue(maxsize=5)
-    queue_objdet_to_txtdet = Queue(maxsize=5)
+    q_to_detector = Queue(maxsize=5)
+    q_from_detector_to_text_reader = Queue(maxsize=5)
     detector = ObjectDetectorActor.remote(  # type: ignore
-        model, queue_to_objdef, queue_objdet_to_txtdet, logger
+        model, q_to_detector, q_from_detector_to_text_reader, logger
     )
     detector.run.remote()
 

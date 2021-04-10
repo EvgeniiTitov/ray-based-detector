@@ -1,2 +1,1 @@
-from .actors_tasks import ObjectDetectorActor
-from .model import DetectionModel
+from .yolov4.yolov4_cv2based import DetectionModel
