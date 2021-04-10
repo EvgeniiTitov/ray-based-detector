@@ -8,7 +8,7 @@ from ray.util.queue import Queue
 from helpers import LoggerMixin
 
 
-class FileReader(threading.Thread, LoggerMixin):
+class FileReaderThread(threading.Thread, LoggerMixin):
     def __init__(
         self, queue_in: Queue, queue_out: Queue, *args, **kwargs
     ) -> None:
@@ -42,4 +42,5 @@ class FileReader(threading.Thread, LoggerMixin):
                 )
                 continue
             image_name = os.path.basename(filepath)
+            self.logger.info(f"Image {image_name} pushed to the object store")
             self.queue_out.put((image_name, image_ref))

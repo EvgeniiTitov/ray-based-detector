@@ -1,27 +1,99 @@
 import argparse
-import logging
 import os
 import typing as t
 
-import cv2
 import ray
 from ray.util.queue import Queue
 
-from detectors import DetectionModel
-from detectors import ObjectDetectorActor
+from config import Config
+from detectors import YOLOv4
+from helpers import LoggerMixin
+from helpers import SlackMixin
+from helpers import TheResultProcessor
+from helpers import timer
+from workers import FileReaderThread
+from workers import NetRunnerThread
+from workers import ResultWriterThread
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(lineno)d in %(filename)s at %(asctime)s: %(message)s",
-)
-logger = logging.getLogger(__name__)
+class Detector(LoggerMixin, SlackMixin):
+    def __init__(
+        self,
+        source: str,
+        dest: str,
+        batch_size: int,
+        tiles: int,
+        webhook: str,
+        gpu: bool,
+    ) -> None:
+        SlackMixin.__init__(self, webhook)
+        self._source = source
+        self._dest = dest
+        self._batch_size = batch_size
+        self._n_tiles = tiles
+        self._threads = []
+
+        self._q_to_file_reader = Queue()
+        self._q_freader_to_detector = Queue(maxsize=Config.Q_READER_NET_RUNNER)
+        self._q_detector_fwriter = Queue(maxsize=Config.Q_RUNNER_WRITER)
+        self.logger.info("Queues initialized")
+
+        self._file_reader_thread = FileReaderThread(
+            queue_in=self._q_to_file_reader,
+            queue_out=self._q_freader_to_detector,
+        )
+        self._model = YOLOv4("yolov4", device="gpu" if gpu else "cpu")
+        self._net_runner_thread = NetRunnerThread(
+            queue_in=self._q_freader_to_detector,
+            queue_out=self._q_detector_fwriter,
+            model=self._model,
+        )
+        self._result_processor = TheResultProcessor(dest)
+        self._result_processor_thread = ResultWriterThread(
+            result_writer=self._result_processor,
+            queue_in=self._q_detector_fwriter,
+        )
+        self._threads.append(self._file_reader_thread)
+        self._threads.append(self._net_runner_thread)  # type: ignore
+        self._threads.append(self._result_processor_thread)  # type: ignore
+        self._start()
+        self.logger.info("Detector started")
+
+    def process_images(self):
+        for image_path in self._get_images_to_process():
+            self._q_to_file_reader.put(image_path)
+            self.logger.info(
+                f"Image {os.path.basename(image_path)} " f"sent to file reader"
+            )
+
+    def _get_images_to_process(self) -> t.Generator:
+        for item in os.listdir(self._source):
+            if any(item.endswith(ext.lower()) for ext in Config.ALLOWED_EXTS):
+                yield os.path.join(self._source, item)
+            else:
+                self.logger.warning(
+                    f"Cannot process file: {item}. Unsupported extension"
+                )
+
+    def _start(self) -> None:
+        for thread in self._threads:
+            thread.start()
+
+    def stop(self) -> None:
+        self._q_to_file_reader.put("KILL")
+        for thread in self._threads:
+            thread.join()
+        self.logger.info("Detected stopped")
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=str, default="source")
     parser.add_argument("--output", type=str, default="output")
+    parser.add_argument("--batch_size", type=int, default=Config.BATCH_SIZE)
+    parser.add_argument("--n_tiles", type=int, default=Config.TILES_PER_IMAGE)
+    parser.add_argument("--webhook", type=str, default=Config.SLACK_HOOK)
+    parser.add_argument("--gpu", action="store_true")
     return parser.parse_args()
 
 
@@ -32,45 +104,24 @@ def validate_args(args: argparse.Namespace) -> None:
         try:
             os.mkdir(args.output)
         except Exception as e:
-            logger.exception(f"Faild to create the output folder. Error: {e}")
+            print(f"Failed to create the output folder. Error: {e}")
             raise e
 
 
-def get_images_to_process(source: str = "source") -> t.Generator:
-    for item in os.listdir(source):
-        if any(item.endswith(e.lower()) for e in (".jpg", ".jpeg", ".png")):
-            yield os.path.join(source, item)
-        else:
-            logger.info(f"Cannot process file: {item}. Unsupported extension")
-
-
+@timer
 def main() -> int:
     args = parse_args()
     validate_args(args)
-
-    model = DetectionModel("diagram_reader")
-
-    q_to_detector = Queue(maxsize=5)
-    q_from_detector_to_text_reader = Queue(maxsize=5)
-    detector = ObjectDetectorActor.remote(  # type: ignore
-        model, q_to_detector, q_from_detector_to_text_reader, logger
+    d = Detector(
+        source=args.source,
+        dest=args.output,
+        batch_size=args.batch_size,
+        tiles=args.n_tiles,
+        webhook=args.webhook,
+        gpu=args.gpu,
     )
-    detector.run.remote()
-
-    for image_path in get_images_to_process(args.source):
-        image = cv2.imread(image_path)
-        if image is None:
-            logger.error(f"Failed to open image: {image_path}")
-            continue
-        image_ref = ray.put(image)
-        queue_to_objdef.put((os.path.basename(image_path), image_ref))
-
-    while not queue_objdet_to_txtdet.empty():
-        image_name, image, results = queue_objdet_to_txtdet.get()
-        logger.info(
-            f"Got results for image: {image_name}. " f"Detections: {results}"
-        )
-
+    d.process_images()
+    d.stop()
     return 0
 
 

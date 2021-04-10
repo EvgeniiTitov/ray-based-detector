@@ -10,7 +10,7 @@ from detectors.yolov4.abstract_detector import Model
 from helpers import LoggerMixin
 
 
-class NetRunner(threading.Thread, LoggerMixin):
+class NetRunnerThread(threading.Thread, LoggerMixin):
     def __init__(
         self, queue_in: Queue, queue_out: Queue, model: Model, *args, **kwargs
     ) -> None:
@@ -25,6 +25,7 @@ class NetRunner(threading.Thread, LoggerMixin):
             self.logger.exception(msg)
             raise Exception(msg)
         self._batch_size = Config.BATCH_SIZE
+        self.logger.info("NetRunner thread initialized")
 
     def run(self) -> None:
         while True:
