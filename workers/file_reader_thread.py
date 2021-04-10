@@ -31,8 +31,8 @@ class FileReaderThread(threading.Thread, LoggerMixin):
                 continue
             image = cv2.imread(filepath)
             if image is None:
-                self.logger.exception(f"Failed to open image: {filepath}")
-
+                self.logger.error(f"Failed to open image: {filepath}")
+                continue
             try:
                 image_ref = ray.put(image)
             except Exception as e:
