@@ -1,3 +1,7 @@
+POC: Given very large images (10k+), object detector and a payload (
+a model/algorithm doing something to the detected objects - CPU bound), 
+process images as fast as possible.
+
 Detector agnostic - plug in any detector as long as it
 implements the AbstractDetector interface. 
 
