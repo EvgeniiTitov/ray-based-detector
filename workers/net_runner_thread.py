@@ -70,6 +70,9 @@ class NetRunnerThread(threading.Thread, LoggerMixin):
                 ):
                     for pred in preds:
                         left, top, right, bot, conf, _, cls = pred
+                        # Skip classes we don't care about - payload specific
+                        if not cls.lower().strip() in Config.DETECTED_CLASSES:
+                            continue
                         abs_top, abs_bot, abs_left, abs_right = rel_coord
                         scaled_detections.append(
                             [

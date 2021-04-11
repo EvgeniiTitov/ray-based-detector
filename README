@@ -1,0 +1,3 @@
+Detector agnostic - plug in any detector as long as it
+implements the AbstractDetector interface. 
+
