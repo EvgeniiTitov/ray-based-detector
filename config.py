@@ -2,8 +2,8 @@ class Config:
     DETECTOR_NMS = 0.5
     DETECTOR_CONF = 0.6
     ALLOWED_EXTS = (".jpg", ".jpeg", ".png")
-    BATCH_SIZE = 5
-    TILES_PER_IMAGE = 6
+    BATCH_SIZE = 2
+    TILES_PER_IMAGE = 4
 
     SLACK_HOOK = r"kek"
 

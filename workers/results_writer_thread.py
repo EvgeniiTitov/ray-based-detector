@@ -19,7 +19,7 @@ class ResultWriterThread(threading.Thread, LoggerMixin):
     def run(self) -> None:
         while True:
             res = self._queue_in.get()
-            if res == "KILL":
+            if "KILL" in res:
                 self.logger.info("ResultWriter thread killed")
                 break
             image_name, image_ref, detections = res

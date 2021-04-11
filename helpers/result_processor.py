@@ -41,8 +41,8 @@ class TheResultProcessor(ResultProcessor, LoggerMixin):
             cv2.rectangle(image, (left, top), (right, bot), (0, 255, 0), 2)
             cv2.putText(
                 image,
-                f"{cls}_{conf}",
-                (left, top - 10),
+                f"{cls}_{conf: .3f}",
+                (left, top + 10),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 2,
                 (0, 0, 0),

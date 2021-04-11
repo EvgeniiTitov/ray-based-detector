@@ -21,7 +21,7 @@ class FileReaderThread(threading.Thread, LoggerMixin):
     def run(self) -> None:
         while True:
             res = self._queue_in.get()
-            if res == "KILL":
+            if "KILL" in res:
                 self.logger.info("FileReader thread killed")
                 self._queue_out.put("KILL")
                 break
