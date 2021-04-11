@@ -1,5 +1,6 @@
 import threading
 
+import ray
 from ray.util.queue import Queue
 
 from helpers import LoggerMixin
@@ -21,8 +22,15 @@ class ResultWriterThread(threading.Thread, LoggerMixin):
             if res == "KILL":
                 self.logger.info("ResultWriter thread killed")
                 break
-
-            image_name, image, detections = res
+            image_name, image_ref, detections = res
+            try:
+                image = ray.get(image_ref)
+            except Exception as e:
+                self.logger.error(
+                    f"Failed to extract image {image_name} from "
+                    f"the object store. Error: {e}"
+                )
+                raise Exception
             self._result_processor.draw_boxes(image, detections)
             # cv2.imshow(image_name, image)
             # cv2.waitKey(0)

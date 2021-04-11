@@ -35,7 +35,14 @@ class NetRunnerThread(threading.Thread, LoggerMixin):
                 self._queue_out.put("KILL")
                 break
             image_name, image_ref = res
-            image: np.ndarray = ray.get(image_ref)
+            try:
+                image: np.ndarray = ray.get(image_ref)
+            except Exception as e:
+                self.logger.error(
+                    f"Failed to extract image {image_name} from "
+                    f"the object store. Error: {e}."
+                )
+                raise Exception
             # Cut image into tiles
             tile_pairs = self._split_image_into_tiles(image)
             # Split into batches
