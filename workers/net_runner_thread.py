@@ -7,13 +7,18 @@ import ray
 from ray.util.queue import Queue
 
 from config import Config
-from detectors.yolov4.abstract_detector import Model
+from detectors.yolov4.abstract_detector import Detector
 from helpers import LoggerMixin
 
 
 class NetRunnerThread(threading.Thread, LoggerMixin):
     def __init__(
-        self, queue_in: Queue, queue_out: Queue, model: Model, *args, **kwargs
+        self,
+        queue_in: Queue,
+        queue_out: Queue,
+        model: Detector,
+        *args,
+        **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self._queue_in = queue_in

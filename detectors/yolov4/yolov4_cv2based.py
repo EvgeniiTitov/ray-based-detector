@@ -5,11 +5,11 @@ import typing as t
 import cv2
 import numpy as np
 
-from detectors.yolov4.abstract_detector import Model
+from detectors.yolov4.abstract_detector import Detector
 from helpers import LoggerMixin
 
 
-class DetectionModel(Model, LoggerMixin):
+class DetectionModel(Detector, LoggerMixin):
     WEIGHTS = os.path.join(
         os.getcwd(), "detectors", "dependencies", "{}.weights"
     )

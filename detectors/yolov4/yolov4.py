@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 
-from .abstract_detector import Model
+from .abstract_detector import Detector
 from .tool.darknet2pytorch import Darknet
 from .tool.utils import *
 
@@ -17,7 +17,7 @@ from config import Config
 from helpers import LoggerMixin
 
 
-class YOLOv4(Model, LoggerMixin):
+class YOLOv4(Detector, LoggerMixin):
     conf_thresh = Config.DETECTOR_CONF
     NMS_thresh = Config.DETECTOR_NMS
 

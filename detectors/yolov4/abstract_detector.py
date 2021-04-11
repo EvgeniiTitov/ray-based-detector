@@ -4,8 +4,12 @@ from abc import abstractmethod
 
 import numpy as np
 
+TNum = t.TypeVar("TNum", int, float)
 
-class Model(ABC):
+Detections = t.List[t.List[t.Sequence[TNum]]]
+
+
+class Detector(ABC):
     @abstractmethod
-    def predict(self, batch: t.List[np.ndarray]) -> t.List[t.List[t.Any]]:
+    def predict(self, batch: t.List[np.ndarray]) -> Detections:
         ...
