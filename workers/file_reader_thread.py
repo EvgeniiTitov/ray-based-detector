@@ -14,16 +14,16 @@ class FileReaderThread(threading.Thread, LoggerMixin):
         self, queue_in: Queue, queue_out: Queue, *args, **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
-        self.queue_in = queue_in
-        self.queue_out = queue_out
+        self._queue_in = queue_in
+        self._queue_out = queue_out
         self.logger.info("FileReader thread initialized")
 
     def run(self) -> None:
         while True:
-            res = self.queue_in.get()
+            res = self._queue_in.get()
             if res == "KILL":
                 self.logger.info("FileReader thread killed")
-                self.queue_out.put("KILL")
+                self._queue_out.put("KILL")
                 break
 
             filepath = res
@@ -41,7 +41,9 @@ class FileReaderThread(threading.Thread, LoggerMixin):
                     f"Failed to move image {filepath} to "
                     f"object store. Error: {e}"
                 )
+                self._queue_out.put("KILL")
                 raise FailedObjectStorePush
+
             image_name = os.path.basename(filepath)
             self.logger.info(f"Image {image_name} pushed to the object store")
-            self.queue_out.put((image_name, image_ref))
+            self._queue_out.put((image_name, image_ref))

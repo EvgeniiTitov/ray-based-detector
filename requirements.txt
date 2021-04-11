@@ -12,7 +12,7 @@ pre-commit==2.12.0
 PyYAML==5.4.1
 six==1.15.0
 toml==0.10.2
-torch==1.8.1+cu111
-torchvision==0.9.1+cu111
+torch==1.8.1
+torchvision==0.9.1
 typing-extensions==3.7.4.3
 virtualenv==20.4.3

@@ -1,10 +1,11 @@
+# type: ignore
 import os
 import typing as t
 
 import cv2
 import numpy as np
 
-from detectors.yolov4.abstract_model import Model
+from detectors.yolov4.abstract_detector import Model
 from helpers import LoggerMixin
 
 

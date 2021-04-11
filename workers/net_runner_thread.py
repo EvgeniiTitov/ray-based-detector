@@ -3,6 +3,7 @@ import threading
 import typing as t
 
 import numpy as np
+import ray
 from ray.util.queue import Queue
 
 from config import Config
@@ -17,7 +18,6 @@ class NetRunnerThread(threading.Thread, LoggerMixin):
         super().__init__(*args, **kwargs)
         self._queue_in = queue_in
         self._queue_out = queue_out
-        self.logger.info("Net runner thread initialized")
         self._model = model
         self._n_tiles = Config.TILES_PER_IMAGE
         if self._n_tiles % 2:
@@ -34,8 +34,8 @@ class NetRunnerThread(threading.Thread, LoggerMixin):
                 self.logger.info("Net runner thread killed")
                 self._queue_out.put("KILL")
                 break
-            image_name = res[0]
-            image: np.ndarray = res[1]
+            image_name, image_ref = res
+            image: np.ndarray = ray.get(image_ref)
             # Cut image into tiles
             tile_pairs = self._split_image_into_tiles(image)
             # Split into batches
@@ -69,7 +69,12 @@ class NetRunnerThread(threading.Thread, LoggerMixin):
                                 cls,
                             ]
                         )
-            self._queue_out.put((image_name, image, scaled_detections))
+            self._queue_out.put((image_name, image_ref, scaled_detections))
+            self.logger.info(
+                f"NetRunner thread sent results for "
+                f"image {image_name} to ResultProcessor. "
+                f"Detections: {scaled_detections}"
+            )
 
     def _split_image_into_tiles(
         self, image: np.ndarray
