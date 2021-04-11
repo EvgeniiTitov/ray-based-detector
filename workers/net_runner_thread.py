@@ -30,7 +30,7 @@ class NetRunnerThread(threading.Thread, LoggerMixin):
     def run(self) -> None:
         while True:
             res = self._queue_in.get()
-            if len(res) == 1 and "KILL" in res:
+            if "KILL" in res:
                 self.logger.info("Net runner thread killed")
                 self._queue_out.put("KILL")
                 break

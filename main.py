@@ -126,7 +126,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    ray.init()
+    ray.init(num_cpus=Config.RAY_CPUS)
     try:
         main()
     except Exception as e:
