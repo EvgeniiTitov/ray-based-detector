@@ -16,6 +16,7 @@ from workers import NetRunnerThread
 from workers import ResultWriterThread
 
 
+# TODO: Add PayloadRunner
 class Detector(LoggerMixin, SlackMixin):
     def __init__(
         self,

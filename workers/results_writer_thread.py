@@ -31,9 +31,12 @@ class ResultWriterThread(threading.Thread, LoggerMixin):
                     f"the object store. Error: {e}"
                 )
                 raise Exception
+            detections = [e[0] for e in detections]
+            payload_results = [e[1] for e in detections]  # noqa
             self._result_processor.draw_boxes(image, detections)
             # cv2.imshow(image_name, image)
             # cv2.waitKey(0)
             self._result_processor.save_on_disk(image_name, image)
 
-            # TODO: Find out if I can manually pop image off the objest store
+            # TODO: Find out if I can manually pop image off the object store
+            # TODO: Payload results could be saved to json, xml or whatever

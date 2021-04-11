@@ -2,6 +2,14 @@ POC: Given very large images (10k+), object detector and a payload (
 a model/algorithm doing something to the detected objects - CPU bound), 
 process images as fast as possible.
 
+Uses threads for IO tasks (reading/writing files, talking to GPU, etc) 
+and Ray actors/tasks for CPU intensive computations (payload).
+
 Detector agnostic - plug in any detector as long as it
 implements the AbstractDetector interface. 
 
+Payload functions - computationally intensive image processing tasks, say 
+determining inclination angle of a detected concrete pole, which involves
+quite a bit of loops and operations. Could be defined under payload/ 
+Tasks need to be pickable as they will be executed in separate processes 
+as Ray tasks.
