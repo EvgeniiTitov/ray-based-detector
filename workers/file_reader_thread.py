@@ -7,13 +7,15 @@ from ray.util.queue import Queue
 
 from helpers import FailedObjectStorePush
 from helpers import LoggerMixin
+from helpers import SlackMixin
 
 
-class FileReaderThread(threading.Thread, LoggerMixin):
+class FileReaderThread(threading.Thread, LoggerMixin, SlackMixin):
     def __init__(
         self, queue_in: Queue, queue_out: Queue, *args, **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
+        SlackMixin.__init__(self)
         self._queue_in = queue_in
         self._queue_out = queue_out
         self.logger.info("FileReader thread initialized")

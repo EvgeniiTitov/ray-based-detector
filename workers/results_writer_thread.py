@@ -5,13 +5,15 @@ from ray.util.queue import Queue
 
 from helpers import LoggerMixin
 from helpers import ResultProcessor
+from helpers import SlackMixin
 
 
-class ResultWriterThread(threading.Thread, LoggerMixin):
+class ResultWriterThread(threading.Thread, LoggerMixin, SlackMixin):
     def __init__(
         self, result_writer: ResultProcessor, queue_in: Queue, *args, **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
+        SlackMixin.__init__(self)
         self._result_processor = result_writer
         self._queue_in = queue_in
         self.logger.info("ResultWriter thread initialized")
@@ -40,3 +42,8 @@ class ResultWriterThread(threading.Thread, LoggerMixin):
 
             # TODO: Find out if I can manually pop image off the object store
             # TODO: Payload results could be saved to json, xml or whatever
+            self._log_msg(f"Image {image_name} processed")
+
+    def _log_msg(self, msg: str) -> None:
+        self.logger.info(msg)
+        self.slack_msg(msg)

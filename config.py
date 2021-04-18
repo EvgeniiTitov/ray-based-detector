@@ -7,7 +7,10 @@ class Config:
 
     ALLOWED_EXTS = (".jpg", ".jpeg", ".png")
 
-    SLACK_HOOK = r"kek"
+    SLACK_HOOK = (
+        r"https://hooks.slack.com/services/TJQEQPNLC/B01GG8HMX5Y"
+        r"/IrguHEnfxgjIyk7E9OmxREnA"
+    )
 
     Q_READER_NET_RUNNER = 3
     Q_RUNNER_WRITER = 3
