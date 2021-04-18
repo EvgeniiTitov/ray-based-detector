@@ -13,3 +13,7 @@ determining inclination angle of a detected concrete pole, which involves
 quite a bit of loops and operations. Could be defined under payload/ 
 Tasks need to be pickable as they will be executed in separate processes 
 as Ray tasks.
+
+TODO: 
+1. Test the payload runner - the rest is working fine
+2. Think about better / clearer way to register payload functions
