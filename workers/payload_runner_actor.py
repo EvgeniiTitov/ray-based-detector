@@ -11,6 +11,9 @@ TDetection = t.TypeVar("TDetection", int, float, str)
 
 @ray.remote
 def run_payload_function(func: t.Callable) -> t.Any:
+    """Payload function is to be pickable as it will be run as a Ray task
+    executed in a different process
+    """
     return func()
 
 
@@ -36,14 +39,13 @@ class PayloadRunnerActor(LoggerMixin):
                 f"Class {cls_name} - registered payload "
                 f"function {func.__name__}"
             )
+        self._registered_classes = set(self._payload.keys())
         self.logger.info("PayloadRunner actor initialized")
+        self.run()
 
     def run(self) -> None:
         # Start creating tasks for each detection calling one of the payload
         # functions
-
-        # Each payload function to process an image section will be called
-        # as a separate process
         while True:
             res = self._queue_in.get()
             if "KILL" in res:
@@ -51,15 +53,14 @@ class PayloadRunnerActor(LoggerMixin):
                 self._queue_out.put("KILL")
                 break
             image_name, image_ref, detections = res
-            classes_to_process = set(self._payload.keys())
             classes_detected = set([d[-1] for d in detections])
-            intersection = list(
-                classes_detected.intersection(classes_to_process)
+            classes_to_process = list(
+                classes_detected.intersection(self._registered_classes)
             )
-            output: t.List[t.Tuple[TDetection, t.Any]] = []  # type: ignore
-            if not len(intersection):
+            output = []  # type: ignore
+            if not len(classes_to_process):
                 self.logger.warning(
-                    f"No payload functions registered for detected classes "
+                    f"No payload functions registered to process classes "
                     f"{' '.join([str(e) for e in classes_detected])}"
                 )
                 self._queue_out.put(
@@ -70,8 +71,8 @@ class PayloadRunnerActor(LoggerMixin):
                 # object got which job
                 jobs, futures = [], []
                 i = 0
-                for cls in intersection:
-                    func = self._payload.get(cls)
+                for cls in classes_to_process:
+                    func: t.Optional[t.Callable] = self._payload.get(cls)
                     objects_to_process = [
                         e for e in detections if e[-1] == cls
                     ]

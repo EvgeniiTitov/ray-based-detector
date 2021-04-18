@@ -14,6 +14,8 @@ as Ray tasks
 
 Images stored in the object store are immutable, said that any modifications
 will need to happen on copies.
+
+Note the args and their order. Can I create an abstract __call__()?
 """
 
 TDetection = t.TypeVar("TDetection", int, float, str)

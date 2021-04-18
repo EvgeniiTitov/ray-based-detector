@@ -3,6 +3,7 @@ import threading
 import ray
 from ray.util.queue import Queue
 
+from helpers import FailedObjectStorePull
 from helpers import LoggerMixin
 from helpers import ResultProcessor
 from helpers import SlackMixin
@@ -27,7 +28,7 @@ class ResultWriterThread(threading.Thread, LoggerMixin, SlackMixin):
             image_name, image_ref, detections = res
             try:
                 image = ray.get(image_ref)
-            except Exception as e:
+            except FailedObjectStorePull as e:
                 self.logger.error(
                     f"Failed to extract image {image_name} from "
                     f"the object store. Error: {e}"
@@ -36,8 +37,6 @@ class ResultWriterThread(threading.Thread, LoggerMixin, SlackMixin):
             detections = [e[0] for e in detections]
             payload_results = [e[1] for e in detections]  # noqa
             self._result_processor.draw_boxes(image, detections)
-            # cv2.imshow(image_name, image)
-            # cv2.waitKey(0)
             self._result_processor.save_on_disk(image_name, image)
 
             # TODO: Find out if I can manually pop image off the object store
